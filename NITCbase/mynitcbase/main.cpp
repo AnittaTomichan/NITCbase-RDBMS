@@ -10,11 +10,7 @@ using std::cout;
 using std::endl;
 
 //STAGE 1
-/*int main(int argc, char *argv[]) {
-  //Initialize the Run Copy of Disk 
-  Disk disk_run;
-  // StaticBuffer buffer;
-  // OpenRelTable cache;
+void stage1(){
   unsigned char buffer[BLOCK_SIZE];
   Disk::readBlock(buffer,7000);
   char message[]="hello";
@@ -26,16 +22,13 @@ using std::endl;
   Disk::readBlock(buffer2,7000);
   memcpy(message2,buffer2+20,6);
   std::cout<<message2;
-  return 0;
-  return FrontendInterface::handleFrontend(argc, argv);
-
-}*/
+  // return 0;
+ // return FrontendInterface::handleFrontend(argc, argv);
+}
 
 
 //STAGE 2
-/*int main(int argc, char *argv[]) {
-  Disk disk_run;
-
+void stage2(){
   // create objects for the relation catalog and attribute catalog
   RecBuffer relCatBuffer(RELCAT_BLOCK);
   RecBuffer attrCatBuffer(ATTRCAT_BLOCK);
@@ -75,30 +68,25 @@ using std::endl;
     printf("\n");
   }
 
-  return 0;
-} */
+} 
 
-int main(int argc, char *argv[]) {
-  Disk disk_run;
+//STAGE 2 Exercise
 
+void stage2ex1(){
   // Create objects for the relation catalog and attribute catalog
   RecBuffer relCatBuffer(RELCAT_BLOCK);
 
   HeadInfo relCatHeader;
 
   // Load the header of the relation catalog block
-  if (relCatBuffer.getHeader(&relCatHeader) != SUCCESS) {
-    return FAILURE;
-  }
+  relCatBuffer.getHeader(&relCatHeader);
 
   // Iterate through all relations in the relation catalog
   for (int i = 0; i < relCatHeader.numEntries; i++) {
+  
     Attribute relCatRecord[RELCAT_NO_ATTRS];
-    // Get the relation catalog record
-    if (relCatBuffer.getRecord(relCatRecord, i) != SUCCESS) {
-      std::cerr << "Failed to load relation catalog record " << i << std::endl;
-      continue;
-    }                                                                                                                                                                                                         printf("Relation: %s\n", relCatRecord[RELCAT_REL_NAME_INDEX].sVal);
+    relCatBuffer.getRecord(relCatRecord, i);
+                                                                                                                                                                                                             printf("Relation: %s\n", relCatRecord[RELCAT_REL_NAME_INDEX].sVal);
 
     int currentBlock = ATTRCAT_BLOCK;
 
@@ -106,20 +94,14 @@ int main(int argc, char *argv[]) {
     while (currentBlock != -1) {
       RecBuffer attrCatBuffer(currentBlock);
       HeadInfo attrCatHeader;
-
-      // Load the header of the current attribute catalog block
-      if (attrCatBuffer.getHeader(&attrCatHeader) != SUCCESS) {
-        std::cerr << "Failed to load attribute catalog header for block " << currentBlock << std::endl;
-        break;
-     }
+      attrCatBuffer.getHeader(&attrCatHeader);
+      
      // Iterate through all entries in the current block
       for (int j = 0; j < attrCatHeader.numEntries; j++) 
       { 
       Attribute attrCatRecord[ATTRCAT_NO_ATTRS];     //Get the attribute catalog record
-        if (attrCatBuffer.getRecord(attrCatRecord, j) != SUCCESS) {
-          std::cerr << "Failed to load attribute catalog record " << j << " in block " << currentBlock << std::endl;
-          continue;
-        }
+       attrCatBuffer.getRecord(attrCatRecord, j);
+        
 
         // Check if the attribute belongs to the current relation
         if (strcmp(relCatRecord[RELCAT_REL_NAME_INDEX].sVal, 
@@ -135,9 +117,40 @@ int main(int argc, char *argv[]) {
     printf("\n");
   }
 
-  return 0;
+ // return 0;
 } 
      
- 
-    
-    
+void stage2ex2(){
+   RecBuffer attrCatBuffer(ATTRCAT_BLOCK);
+   HeadInfo attrCatHeader;
+   attrCatBuffer.getHeader(&attrCatHeader);
+  
+   
+        // Iterate through all entries in the current block
+        for (int j = 0; j < attrCatHeader.numEntries; j++) {
+          Attribute attrCatRecord[ATTRCAT_NO_ATTRS];
+          attrCatBuffer.getRecord(attrCatRecord, j);
+           
+          if (strcmp (attrCatRecord[ATTRCAT_REL_NAME_INDEX].sVal,"Students") == 0 && strcmp(attrCatRecord[ATTRCAT_ATTR_NAME_INDEX].sVal,"Class")==0) {
+        strcpy(attrCatRecord[ATTRCAT_ATTR_NAME_INDEX].sVal,"Batch");
+        attrCatBuffer.setRecord(attrCatRecord,j);
+        break;
+     }
+     if(j==attrCatHeader.numSlots-1){
+			j=-1;
+			attrCatBuffer=RecBuffer(attrCatHeader.rblock);
+			attrCatBuffer.getHeader(&attrCatHeader);
+		}
+	}
+}
+
+
+int main(int argc, char *argv[]){
+  Disk disk_run;
+  //stage2ex1();
+  stage2ex2();
+  stage2ex1();
+  return 0;
+ } 
+
+

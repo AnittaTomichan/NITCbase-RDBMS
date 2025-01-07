@@ -49,7 +49,10 @@ int RecBuffer::getRecord(union Attribute *rec, int slotNum) {
   // read the block at this.blockNum into a buffer
   unsigned char buffer[BLOCK_SIZE];
   
-  if(Disk::readBlock(buffer,this->blockNum)!=SUCCESS){return FAILURE;}
+  if(Disk::readBlock(buffer,this->blockNum)!=SUCCESS)
+  {
+  return FAILURE;
+  }
   
 
   /* record at slotNum will be at offset HEADER_SIZE + slotMapSize + (recordSize * slotNum)
@@ -66,4 +69,21 @@ int RecBuffer::getRecord(union Attribute *rec, int slotNum) {
   return SUCCESS;
 }
 
-
+int RecBuffer::setRecord(union Attribute *record,int slotNum){
+  HeadInfo head;
+  BlockBuffer::getHeader(&head);
+  
+  int attrs=head.numAttrs;
+  int slots=head.numSlots;
+  
+  unsigned char buffer[BLOCK_SIZE];
+  Disk::readBlock(buffer,this->blockNum);
+  
+  int recordSize=attrs*ATTR_SIZE;
+  unsigned char *slotPointer=buffer+HEADER_SIZE+slots+(recordSize*slotNum);
+  
+  memcpy(slotPointer,record,recordSize);
+  
+  Disk::writeBlock(buffer,this->blockNum);
+  return SUCCESS;
+ }
