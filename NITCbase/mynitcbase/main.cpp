@@ -42,7 +42,6 @@ void stage2(){
   attrCatBuffer.getHeader(&attrCatHeader);
   
   for (int i=0;i<relCatHeader.numEntries;i++) {
-    int  attrCatSlotIndex = 0;
     Attribute relCatRecord[RELCAT_NO_ATTRS]; // will store the record from the relation catalog
     relCatBuffer.getRecord(relCatRecord, i);
 
@@ -58,12 +57,7 @@ void stage2(){
         printf("  %s: %s\n", attrCatRecord[ATTRCAT_ATTR_NAME_INDEX].sVal, attrType);
       }
       
-      if(attrCatSlotIndex == attrCatHeader.numSlots-1){
-      	attrCatSlotIndex=-1;
-      	attrCatBuffer=RecBuffer(attrCatHeader.rblock);
-      	attrCatBuffer.getHeader(&attrCatHeader);
-      }else{
-      attrCatSlotIndex++;}
+      
     }
     printf("\n");
   }
@@ -73,7 +67,7 @@ void stage2(){
 //STAGE 2 Exercise
 
 void stage2ex1(){
-  // Create objects for the relation catalog and attribute catalog
+  // Create objects for the relation catalog
   RecBuffer relCatBuffer(RELCAT_BLOCK);
 
   HeadInfo relCatHeader;
@@ -147,9 +141,23 @@ void stage2ex2(){
 
 int main(int argc, char *argv[]){
   Disk disk_run;
+  StaticBuffer buffer;
+  OpenRelTable cache;
   //stage2ex1();
-  stage2ex2();
-  stage2ex1();
+  //stage2ex2();
+  //stage2ex1();
+  for(int i=0;i<=2;i++){  //stage3ex1 including relation student
+   RelCatEntry relCatBuf;
+   RelCacheTable::getRelCatEntry(i,&relCatBuf);
+   cout<<"Relation: "<<relCatBuf.relName<<"\n";
+     for(int j=0;j<relCatBuf.numAttrs;j++){
+      AttrCatEntry attrCatBuf;
+      AttrCacheTable::getAttrCatEntry(i,j,&attrCatBuf);
+      const char *attrType=attrCatBuf.attrType==NUMBER?"NUM":"STR";
+      cout<<" "<<attrCatBuf.attrName<<": "<<attrType<<"\n";
+     }
+    cout<<"\n";
+   }
   return 0;
  } 
 
