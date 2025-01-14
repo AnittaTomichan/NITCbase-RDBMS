@@ -1,8 +1,8 @@
 #include "RelCacheTable.h"
 
 #include <cstring>
-RelCacheEntry* RelCacheTable::relCache[MAX_OPEN];
 
+RelCacheEntry* RelCacheTable::relCache[MAX_OPEN];
 /*
 Get the relation catalog entry for the relation with rel-id `relId` from the cache
 NOTE: this function expects the caller to allocate memory for `*relCatBuf`
@@ -36,5 +36,35 @@ void RelCacheTable::recordToRelCatEntry(union Attribute record[RELCAT_NO_ATTRS],
   relCatEntry->firstBlk=(int)record[RELCAT_FIRST_BLOCK_INDEX].nVal;
   relCatEntry->lastBlk=(int)record[RELCAT_LAST_BLOCK_INDEX].nVal;
   relCatEntry->numSlotsPerBlk=(int)record[RELCAT_NO_SLOTS_PER_BLOCK_INDEX].nVal;
-
+  
 }
+
+int RelCacheTable::getSearchIndex(int relId, RecId* searchIndex){
+	if(relId<0 || relId>=MAX_OPEN){
+		return E_OUTOFBOUND;
+	}
+	if(relCache[relId]==nullptr){
+		return E_RELNOTOPEN;
+	}
+	*searchIndex=relCache[relId]->searchIndex;
+	return SUCCESS;
+}
+
+int RelCacheTable::setSearchIndex(int relId, RecId* searchIndex){
+	if(relId<0||relId>=MAX_OPEN){
+		return E_OUTOFBOUND;
+	}
+	if(relCache[relId]==nullptr){
+		return E_RELNOTOPEN;
+	}
+	relCache[relId]->searchIndex= *searchIndex;
+	return SUCCESS;
+}
+int RelCacheTable::resetSearchIndex(int relId){
+	relCache[relId]->searchIndex.block=-1;
+	relCache[relId]->searchIndex.slot=-1;
+	return SUCCESS;
+}
+
+
+

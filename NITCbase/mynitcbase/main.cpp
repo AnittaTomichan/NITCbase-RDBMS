@@ -138,14 +138,7 @@ void stage2ex2(){
 	}
 }
 
-
-int main(int argc, char *argv[]){
-  Disk disk_run;
-  StaticBuffer buffer;
-  OpenRelTable cache;
-  //stage2ex1();
-  //stage2ex2();
-  //stage2ex1();
+void stage3(){
   for(int i=0;i<=2;i++){  //stage3ex1 including relation student
    RelCatEntry relCatBuf;
    RelCacheTable::getRelCatEntry(i,&relCatBuf);
@@ -158,6 +151,17 @@ int main(int argc, char *argv[]){
      }
     cout<<"\n";
    }
+  }
+  
+int main(int argc, char *argv[]){
+  Disk disk_run;
+  StaticBuffer buffer;
+  OpenRelTable cache;
+  //stage2ex1();
+  //stage2ex2();
+  //stage2ex1();
+  
+   return FrontendInterface::handleFrontend(argc,argv);
   return 0;
  } 
 
