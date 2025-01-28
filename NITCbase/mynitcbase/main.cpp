@@ -139,7 +139,7 @@ void stage2ex2(){
 }
 
 void stage3(){
-  for(int i=0;i<=2;i++){  //stage3ex1 including relation student
+  for(int i=0;i<=2;i++){  //stage3ex1 including relation Student
    RelCatEntry relCatBuf;
    RelCacheTable::getRelCatEntry(i,&relCatBuf);
    cout<<"Relation: "<<relCatBuf.relName<<"\n";
@@ -160,8 +160,9 @@ int main(int argc, char *argv[]){
   //stage2ex1();
   //stage2ex2();
   //stage2ex1();
+  //stage3();
   
-   return FrontendInterface::handleFrontend(argc,argv);
+  return FrontendInterface::handleFrontend(argc,argv);
   return 0;
  } 
 
