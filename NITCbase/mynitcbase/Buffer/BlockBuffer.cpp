@@ -1,5 +1,5 @@
 #include "BlockBuffer.h"
-
+#include<iostream>
 #include <cstdlib>
 #include <cstring>
 
@@ -33,6 +33,7 @@ int BlockBuffer::getHeader(struct HeadInfo *head) {
   memcpy(&head->numAttrs, bufferPtr + 20, 4);
   memcpy(&head->rblock, bufferPtr + 12, 4);
   memcpy(&head->lblock, bufferPtr + 8, 4);
+  memcpy(&head->pblock, bufferPtr + 4, 4);
 
   return SUCCESS;
 }
@@ -76,8 +77,17 @@ NOTE: this function expects the caller to allocate memory for the argument
 int BlockBuffer::loadBlockAndGetBufferPtr(unsigned char **buffPtr) {
   // check whether the block is already present in the buffer using StaticBuffer.getBufferNum()
   int bufferNum = StaticBuffer::getBufferNum(this->blockNum);
+  
+   if (bufferNum != E_BLOCKNOTINBUFFER)
+  {
+    for (int bufferIndex = 0; bufferIndex < BUFFER_CAPACITY; bufferIndex++)
+    {
+      StaticBuffer::metainfo[bufferIndex].timeStamp++;
+    }
+    StaticBuffer::metainfo[bufferNum].timeStamp = 0;
+  }
 
-  if (bufferNum == E_BLOCKNOTINBUFFER) {
+  else {
     bufferNum = StaticBuffer::getFreeBuffer(this->blockNum);
 
     if (bufferNum == E_OUTOFBOUND) {
@@ -93,25 +103,56 @@ int BlockBuffer::loadBlockAndGetBufferPtr(unsigned char **buffPtr) {
   return SUCCESS;
 }
 
-int RecBuffer::setRecord(union Attribute *record, int slotNum){
-	HeadInfo head;
-	BlockBuffer::getHeader(&head);
-	
-	int attrs=head.numAttrs;
-	int slots=head.numSlots;
-	
-	unsigned char buffer[BLOCK_SIZE];
-	Disk::readBlock(buffer,this->blockNum);
-	
-	int recordSize=attrs*ATTR_SIZE;
-	unsigned char *slotPointer=buffer+HEADER_SIZE+slots+(recordSize*slotNum);
-	
-	memcpy(slotPointer,record,recordSize);
-	
-	Disk::writeBlock(buffer,this->blockNum);
-	return SUCCESS;
-}
+int RecBuffer::setRecord(union Attribute *rec, int slotNum) {
+    unsigned char *bufferPtr;
+    /* get the starting address of the buffer containing the block
+       using loadBlockAndGetBufferPtr(&bufferPtr). */
+   int bufferNum=loadBlockAndGetBufferPtr(&bufferPtr);
+   if(bufferNum !=SUCCESS){
+    return bufferNum;
+    }
+   
+    /* get the header of the block using the getHeader() function */
+    HeadInfo head;
+    BlockBuffer::getHeader(&head);
 
+    // get number of attributes in the block.
+    
+    int attrCount=head.numAttrs;
+
+    // get the number of slots in the block.
+    int slotCount=head.numSlots;
+    if(slotNum>=slotCount || slotNum<0){
+     return E_OUTOFBOUND; }
+
+    // if input slotNum is not in the permitted range return E_OUTOFBOUND.
+
+    /* offset bufferPtr to point to the beginning of the record at required
+       slot. the block contains the header, the slotmap, followed by all
+       the records. so, for example,
+       record at slot x will be at bufferPtr + HEADER_SIZE + (x*recordSize)
+       copy the record from `rec` to buffer using memcpy
+       (hint: a record will be of size ATTR_SIZE * numAttrs)
+    */
+    int recordSize = attrCount * ATTR_SIZE;
+  unsigned char *slotPointer = bufferPtr + (HEADER_SIZE + slotCount + (recordSize * slotNum));
+  memcpy(slotPointer, rec, recordSize);
+  
+
+    // update dirty bit using setDirtyBit()
+    int ret = StaticBuffer::setDirtyBit(this->blockNum);
+    if(ret!=SUCCESS){
+     std::cout<<"There is error\n";
+     exit(1);
+    }
+
+    /* (the above function call should not fail since the block is already
+       in buffer and the blockNum is valid. If the call does fail, there
+       exists some other issue in the code) */
+       
+
+    return SUCCESS;
+}
 /* used to get the slotmap from a record block
 NOTE: this function expects the caller to allocate memory for `*slotMap`
 */
@@ -143,9 +184,12 @@ int compareAttrs(union Attribute attr1, union Attribute attr2, int attrType) {
     else{
     	diff=attr1.nVal-attr2.nVal;
     }
-    if(diff>0){return 1;}
-    else if(diff==0){return 0;}
-    else{return -1;}
+    if(diff>0)
+         {return 1;}
+    else if(diff==0)
+          {return 0;}
+    else
+       {return -1;}
     
 }
 

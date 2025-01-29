@@ -51,36 +51,26 @@ OpenRelTable::OpenRelTable(){
 	  //  and attribute catalog.)
 
 	  /**** setting up Relation Catalog relation and Atribute Catalog Relation in the Attribute Cache Table ****/
-	RecBuffer attrCatBlock(ATTRCAT_BLOCK);
-	Attribute attrCatRecord[ATTRCAT_NO_ATTRS];
-	
-	
-	for(int relId=RELCAT_RELID,recordId=0;relId<=ATTRCAT_RELID+1;relId++){
-		int attrNums=RelCacheTable::relCache[relId]->relCatEntry.numAttrs;
-		AttrCacheEntry *attrCacheEntry=nullptr, *head=nullptr, *curr=nullptr;
+	 RecBuffer attrCatBlock(ATTRCAT_BLOCK);
+    Attribute attrCatRecord[ATTRCAT_NO_ATTRS];
+    AttrCacheEntry *attrCacheEntry = nullptr, *head = nullptr;
+    for (int relId = RELCAT_RELID, recordId = 0; relId <= ATTRCAT_RELID+1; relId++)
+    {
+        int numberOfAttr = RelCacheTable::relCache[relId]->relCatEntry.numAttrs;
+        head = createAttrCacheEntryList(numberOfAttr);
+        attrCacheEntry = head;
+        while (numberOfAttr--)
+        {
+            attrCatBlock.getRecord(attrCatRecord, recordId);
+            AttrCacheTable::recordToAttrCatEntry(attrCatRecord, &(attrCacheEntry->attrCatEntry));
+            attrCacheEntry->recId.block = ATTRCAT_BLOCK;
+            attrCacheEntry->recId.slot = recordId++;
+
+            attrCacheEntry = attrCacheEntry->next;
+        }
+        AttrCacheTable::attrCache[relId] = head;
+    }
 		
-		head=curr=(AttrCacheEntry*)malloc(sizeof(AttrCacheEntry));
-		int size=attrNums-1;
-		while(size--){
-			curr->next=(AttrCacheEntry*)malloc(sizeof(AttrCacheEntry));
-			curr=curr->next;
-		}
-		curr->next=nullptr;
-		
-		attrCacheEntry=head;
-		
-		while(attrNums--){
-			attrCatBlock.getRecord(attrCatRecord, recordId);
-			
-			AttrCacheTable::recordToAttrCatEntry(attrCatRecord,&(attrCacheEntry->attrCatEntry));
-			attrCacheEntry->recId.slot=recordId++;
-			attrCacheEntry->recId.block=ATTRCAT_BLOCK;
-			attrCacheEntry=attrCacheEntry->next;
-		}
-		AttrCacheTable::attrCache[relId]=head;
-		
-	
-	}
 	
  /************ Setting up tableMetaInfo entries ************/
 
