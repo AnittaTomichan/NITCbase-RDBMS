@@ -5,13 +5,13 @@
 
 int Frontend::create_table(char relname[ATTR_SIZE], int no_attrs, char attributes[][ATTR_SIZE],
                            int type_attrs[]) {
+  // Schema::createRel
   return Schema::createRel(relname,no_attrs,attributes,type_attrs);
-  //return SUCCESS;
 }
 
 int Frontend::drop_table(char relname[ATTR_SIZE]) {
+  // Schema::deleteRel
   return Schema::deleteRel(relname);
-  //return SUCCESS;
 }
 
 int Frontend::open_table(char relname[ATTR_SIZE]) {
@@ -48,13 +48,13 @@ int Frontend::insert_into_table_values(char relname[ATTR_SIZE], int attr_count, 
 
 int Frontend::select_from_table(char relname_source[ATTR_SIZE], char relname_target[ATTR_SIZE]) {
   // Algebra::project
-  return SUCCESS;
+  return Algebra::project(relname_source,relname_target);
 }
 
 int Frontend::select_attrlist_from_table(char relname_source[ATTR_SIZE], char relname_target[ATTR_SIZE],
                                          int attr_count, char attr_list[][ATTR_SIZE]) {
   // Algebra::project
-  return SUCCESS;
+  return Algebra::project(relname_source,relname_target,attr_count,attr_list);
 }
 
 int Frontend::select_from_table_where(char relname_source[ATTR_SIZE], char relname_target[ATTR_SIZE],
@@ -68,6 +68,21 @@ int Frontend::select_attrlist_from_table_where(char relname_source[ATTR_SIZE], c
                                                int attr_count, char attr_list[][ATTR_SIZE],
                                                char attribute[ATTR_SIZE], int op, char value[ATTR_SIZE]) {
   // Algebra::select + Algebra::project??
+  int ret=Algebra::select(relname_source,"temp",attribute,op,value);
+  if(ret!=SUCCESS){return ret;}
+
+  ret=OpenRelTable::openRel("temp");
+  if(ret<0 or ret>=MAX_OPEN){
+    return ret;
+  }
+
+  ret=Algebra::project("temp",relname_target,attr_count,attr_list);
+  if(ret!=SUCCESS){
+    return ret;
+  }
+
+  Schema::closeRel("temp");
+  Schema::deleteRel("temp");
   return SUCCESS;
 }
 

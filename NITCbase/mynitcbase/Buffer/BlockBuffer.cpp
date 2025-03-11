@@ -243,7 +243,7 @@ int BlockBuffer::setHeader(struct HeadInfo *head){
   if(buffstart!=SUCCESS){
     return buffstart;
   }
-  struct HeadInfo *bufferHeader = (struct HeadInfo *)bufferPtr;
+  HeadInfo *bufferHeader = (HeadInfo *)bufferPtr;
 
   // copy the fields of the HeadInfo pointed to by head (except reserved) to
   // the header of the block (pointed to by bufferHeader)
@@ -254,16 +254,17 @@ int BlockBuffer::setHeader(struct HeadInfo *head){
 
   // return SUCCESS;
 
-  bufferHeader->numSlots=head->numSlots;
-  bufferHeader->lblock=head->lblock;
-  bufferHeader->numEntries = head->numEntries;
-  bufferHeader->pblock = head->pblock;
-  bufferHeader->rblock = head->rblock;
   bufferHeader->blockType = head->blockType;
-  bufferHeader->numAttrs=head->numAttrs;
+  bufferHeader->pblock = head->pblock;
+  bufferHeader->lblock = head->lblock;
+  bufferHeader->rblock = head->rblock;
+  bufferHeader->numAttrs = head->numAttrs;
+  bufferHeader->numEntries = head->numEntries;
+  bufferHeader->numSlots = head->numSlots;
 
   int setDirty=StaticBuffer::setDirtyBit(this->blockNum);
-  return setDirty;
+  if(setDirty!=SUCCESS)return setDirty;
+  return SUCCESS;
 }
 
 
@@ -369,35 +370,32 @@ int BlockBuffer::getBlockNum() {
 
 void BlockBuffer::releaseBlock(){
 
-    // if blockNum is INVALID_BLOCKNUM (-1), or it is invalidated already, do nothing
-    if(blockNum<0 || blockNum>=DISK_BLOCKS ||StaticBuffer::blockAllocMap[blockNum]==UNUSED_BLK){
-     return;
-     }
+  if (this->blockNum == -1)
+  return;
 
-    // else
-        /* get the buffer number of the buffer assigned to the block
-           using StaticBuffer::getBufferNum().
-           (this function return E_BLOCKNOTINBUFFER if the block is not
-           currently loaded in the buffer)
-            */
-   int bufferNum = StaticBuffer::getBufferNum(blockNum);
+  // else
+
+  /* get the buffer number of the buffer assigned to the block
+      using StaticBuffer::getBufferNum().
+      (this function return E_BLOCKNOTINBUFFER if the block is not
+      currently loaded in the buffer)
+  */
+
+  int bufferNum = StaticBuffer::getBufferNum(this->blockNum);
 
     if (bufferNum == E_BLOCKNOTINBUFFER)
-    {
-        return;
-    }
-        // if the block is present in the buffer, free the buffer
-        // by setting the free flag of its StaticBuffer::tableMetaInfo entry
-        // to true.
+      return;
+
+    // if the block is present in the buffer, free the buffer
+    // by setting the free flag of its StaticBuffer::tableMetaInfo entry
+    // to true.
     StaticBuffer::metainfo[bufferNum].free = true;
 
-    
-        // free the block in disk by setting the data type of the entry
-        // corresponding to the block number in StaticBuffer::blockAllocMap
-        // to UNUSED_BLK.
-        StaticBuffer::blockAllocMap[blockNum] = UNUSED_BLK;
+    // free the block in disk by setting the data type of the entry
+    // corresponding to the block number in StaticBuffer::blockAllocMap
+    // to UNUSED_BLK.
+    StaticBuffer::blockAllocMap[this->blockNum] = UNUSED_BLK;
 
-    this->blockNum = INVALID_BLOCKNUM;
-
-        // set the object's blockNum to INVALID_BLOCK (-1)
+    // set the object's blockNum to INVALID_BLOCK (-1)
+    this->blockNum = -1;
 }
