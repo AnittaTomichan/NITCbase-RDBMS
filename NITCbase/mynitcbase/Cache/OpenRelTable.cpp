@@ -351,12 +351,18 @@ int OpenRelTable::closeRel(int relId) {
   free(RelCacheTable::relCache[relId]);
   AttrCacheEntry *head=AttrCacheTable::attrCache[relId];
   AttrCacheEntry *next=head->next;
-  while(next){
+  while(true){
+    if(head->dirty){
+      Attribute attrCatRecord[ATTRCAT_NO_ATTRS];
+      AttrCacheTable::attrCatEntryToRecord(&(head->attrCatEntry),attrCatRecord);
+      RecBuffer attrCatBuf(head->recId.block);
+      attrCatBuf.setRecord(attrCatRecord,head->recId.slot);
+    }
   	free(head);
   	head=next;
+    if(head==NULL){break;}
   	next=next->next;
   }
-  free(head);
   // update `tableMetaInfo` to set `relId` as a free slot
   // update `relCache` and `attrCache` to set the entry at `relId` to nullptr
   tableMetaInfo[relId].free=true;
