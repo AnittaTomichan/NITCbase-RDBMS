@@ -32,14 +32,14 @@ int Frontend::alter_table_rename_column(char relname[ATTR_SIZE], char attrname_f
 }
 
 int Frontend::create_index(char relname[ATTR_SIZE], char attrname[ATTR_SIZE]) {
-  //return Schema::createIndex(relname,attrname);
-  return SUCCESS;
+  Schema::createIndex(relname,attrname);
+ // return SUCCESS;
   
 }
 
 int Frontend::drop_index(char relname[ATTR_SIZE], char attrname[ATTR_SIZE]) {
-  //return Schema::dropIndex(relname,attrname);
-  return SUCCESS;
+    Schema::dropIndex(relname,attrname);
+  //return SUCCESS;
   
 }
 

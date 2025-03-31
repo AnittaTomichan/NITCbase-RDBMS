@@ -153,12 +153,12 @@ int StaticBuffer::getFreeBuffer(int blockNum)
 }
 
 int StaticBuffer::getBufferNum(int blockNum){
-	if(blockNum<0 || blockNum>DISK_BLOCKS){
+	if(blockNum<0 || blockNum>=DISK_BLOCKS){
 		return E_OUTOFBOUND;
 	}
 	
 	for(int bufferIndex=0;bufferIndex<BUFFER_CAPACITY;bufferIndex++){
-		if(metainfo[bufferIndex].blockNum==blockNum){
+		if(!metainfo[bufferIndex].free && metainfo[bufferIndex].blockNum==blockNum){
 			return bufferIndex;
 		}
 	}

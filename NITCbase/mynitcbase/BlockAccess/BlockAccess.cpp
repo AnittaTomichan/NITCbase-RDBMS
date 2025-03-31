@@ -288,6 +288,8 @@ int BlockAccess::renameAttribute(char relName[ATTR_SIZE], char oldName[ATTR_SIZE
 
     return SUCCESS;
 }
+
+
 int BlockAccess::insert(int relId, Attribute *record) {
     RelCatEntry relCatEntry;
     RelCacheTable::getRelCatEntry(relId, &relCatEntry);
@@ -329,8 +331,7 @@ int BlockAccess::insert(int relId, Attribute *record) {
           (unsigned char *)malloc(sizeof(unsigned char) * header.numSlots);
       recBuffer.getSlotMap(slotMap);
       // get slot map of block(blockNum) using RecBuffer::getSlotMap() function
-  
-      // search for free slot in the block 'blockNum' and store it's rec-id in
+   // search for free slot in the block 'blockNum' and store it's rec-id in
       // rec_id (Free slot can be found by iterating over the slot map of the
       // block)
       /* slot map stores SLOT_UNOCCUPIED if slot is free and
@@ -505,40 +506,6 @@ int BlockAccess::insert(int relId, Attribute *record) {
     return flag;
 }
 
-/*
-NOTE: This function will copy the result of the search to the `record` argument.
-      The caller should ensure that space is allocated for `record` array
-      based on the number of attributes in the relation.
-
-int BlockAccess::search(int relId, Attribute *record, char attrName[ATTR_SIZE], Attribute attrVal, int op) {
-    // Declare a variable called recid to store the searched record
-    RecId recId;
-    recId=BlockAccess::linearSearch(relId,attrName,attrVal,op);
-
-    /* search for the record id (recid) corresponding to the attribute with
-    attribute name attrName, with value attrval and satisfying the condition op
-    using linearSearch() 
-    if(recId.block==-1 and recId.slot==-1){
-        return E_NOTFOUND;
-    }
-    // if there's no record satisfying the given condition (recId = {-1, -1})
-    //    return E_NOTFOUND;
-
-    /* Copy the record with record id (recId) to the record buffer (record)
-       For this Instantiate a RecBuffer class object using recId and
-       call the appropriate method to fetch the record
-    
-   RecBuffer recBuffer(recId.block);
-   int ret=recBuffer.getRecord(record,recId.slot);
-   if(ret!=SUCCESS){
-    return ret;
-   }
-
-    return SUCCESS;
-}
-
-*/
-
 int BlockAccess::deleteRelation(char relName[ATTR_SIZE]) {
 
 	if (strcmp(relName, RELCAT_RELNAME) == 0 || strcmp(relName, ATTRCAT_RELNAME) == 0)
@@ -571,8 +538,7 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE]) {
   
 	while (currentBlockNum != -1) {
 		RecBuffer currentBlockBuffer (currentBlockNum);
-
-    	// get block header using BlockBuffer.getHeader
+// get block header using BlockBuffer.getHeader
 		HeadInfo currentBlockHeader;
 		currentBlockBuffer.getHeader(&currentBlockHeader);
 
@@ -635,7 +601,7 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE]) {
         /* If number of entries become 0, releaseBlock is called after fixing
            the linked list.
         */
-        if (attrCatHeader.numEntries == 0) {
+         if (attrCatHeader.numEntries == 0) {
             /* Standard DOUBLY Linked List Delete for a Block
                Get the header of the left block and set it's rblock to this
                block's rblock
